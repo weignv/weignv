@@ -45,6 +45,12 @@ commandList->CopyResource(readbackBuffer.get(), outputBuffer.get());
 // Code goes here to close, execute (and optionally reset) the command list, and also
 // to use a fence to wait for the command queue.
 
+// Wait for the compute shader to complete the simulation.
+UINT64 threadFenceValue = InterlockedIncrement(&m_threadFenceValues[threadIndex]);
+ThrowIfFailed(pCommandQueue->Signal(pFence, threadFenceValue));
+ThrowIfFailed(pFence->SetEventOnCompletion(threadFenceValue, m_threadFenceEvents[threadIndex]));
+WaitForSingleObject(m_threadFenceEvents[threadIndex], INFINITE);
+
 // The code below assumes that the GPU wrote FLOATs to the buffer.
 
 D3D12_RANGE readbackBufferRange{ 0, outputBufferSize };
